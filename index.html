@@ -45,8 +45,7 @@ body { font-family: 'DM Sans', sans-serif; background: #f7f7f5; color: #111; min
 .chips::-webkit-scrollbar { display: none; }
 .chip { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; white-space: nowrap; border: 1px solid #e0e0de; background: #ffffff; color: #666; cursor: pointer; font-family: inherit; }
 .chip.on { background: rgba(58,143,31,.1); border-color: rgba(58,143,31,.4); color: #3a8f1f; }
-.chip.ordered { background: rgba(37,99,235,.1); border-color: rgba(37,99,235,.4); color: #1d4ed8; }
-.chip.ordered.on { background: rgba(37,99,235,.1); border-color: rgba(37,99,235,.5); color: #1d4ed8; }
+.chip.requested.on { background: rgba(217,119,6,.1); border-color: rgba(217,119,6,.4); color: #b45309; }
 
 /* items */
 .item { background: #ffffff; border: 1px solid #e8e8e6; border-radius: 12px; display: flex; align-items: center; gap: 12px; padding: 12px; margin-bottom: 8px; cursor: pointer; }
@@ -60,10 +59,9 @@ body { font-family: 'DM Sans', sans-serif; background: #f7f7f5; color: #111; min
 .tags { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
 .tag { font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 20px; }
 .tag-req { background: rgba(217,119,6,.1); color: #b45309; }
-.tag-ord { background: rgba(37,99,235,.1); color: #1d4ed8; }
-.tag-new { background: rgba(0,0,0,.07); color: #555; }
-.tag-rej { background: rgba(220,38,38,.1); color: #dc2626; }
-.idate { font-size: 10px; color: #bbb; font-family: ‘DM Mono’, monospace; flex-shrink: 0; }
+.tag-pending { background: rgba(0,0,0,.07); color: #555; }
+.tag-new { background: rgba(58,143,31,.1); color: #3a8f1f; }
+.idate { font-size: 10px; color: #bbb; font-family: 'DM Mono', monospace; flex-shrink: 0; }
 
 /* empty */
 .empty { text-align: center; padding: 60px 20px; color: #999; }
@@ -108,26 +106,14 @@ body { font-family: 'DM Sans', sans-serif; background: #f7f7f5; color: #111; min
 .btn-g { background: #111; color: #fff; border-color: #111; }
 .btn-g:disabled { opacity: .35; cursor: not-allowed; }
 .btn-r { color: #dc2626; border-color: rgba(255,92,92,.2); background: rgba(255,92,92,.06); }
-.btn-blue { background: #1d4ed8; color: #fff; border-color: #1d4ed8; }
+.btn-amber { background: #b45309; color: #fff; border-color: #b45309; }
 
 /* detail */
 .dphoto { width: 100%; border-radius: 8px; object-fit: cover; border: 1px solid #e0e0de; margin-bottom: 8px; cursor: zoom-in; display: block; }
 .drow { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0ee; gap: 12px; font-size: 13px; }
 .drow:last-child { border: none; }
 .dk { color: #999; flex-shrink: 0; }
-.dv { color: #333; text-align: right; font-family: ‘DM Mono’, monospace; font-size: 12px; word-break: break-all; }
-
-/* pin modal */
-.pin-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:40; align-items:center; justify-content:center; padding:24px; }
-.pin-overlay.open { display:flex; }
-.pin-box { background:#fff; border-radius:16px; padding:28px 24px; width:100%; max-width:360px; }
-.pin-box h2 { font-size:18px; font-weight:500; margin-bottom:6px; letter-spacing:-0.02em; }
-.pin-box p { font-size:13px; color:#888; margin-bottom:20px; }
-.pin-input { width:100%; padding:12px; font-size:24px; border:1px solid #e0e0de; border-radius:8px; font-family:‘DM Mono’,monospace; outline:none; color:#111; background:#f7f7f5; text-align:center; letter-spacing:0.3em; }
-.pin-input:focus { border-color:#aaa; }
-.pin-error { font-size:12px; color:#dc2626; text-align:center; margin-top:6px; font-family:‘DM Mono’,monospace; display:none; }
-.pin-submit { width:100%; margin-top:10px; padding:13px; background:#111; color:#fff; border:none; border-radius:8px; font-size:15px; font-weight:500; font-family:inherit; cursor:pointer; }
-.pin-submit:active { opacity:.8; }
+.dv { color: #333; text-align: right; font-family: 'DM Mono', monospace; font-size: 12px; word-break: break-all; }
 
 /* name overlay */
 .name-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:200; align-items:center; justify-content:center; padding:24px; }
@@ -145,29 +131,12 @@ body { font-family: 'DM Sans', sans-serif; background: #f7f7f5; color: #111; min
 .lightbox.open { display:flex; }
 .lightbox img { max-width:100%; max-height:100vh; object-fit:contain; border-radius:4px; }
 .lightbox-close { position:fixed; top:16px; right:16px; width:40px; height:40px; background:rgba(255,255,255,.2); border:none; border-radius:50%; color:#fff; font-size:22px; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:10000; }
-
-body::after {
-content: ‘’;
-position: fixed;
-bottom: 60px;
-right: -20px;
-width: 280px;
-height: 380px;
-background-image: url(‘data:image/png;base64,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qoAJQhJwBgABiAqikAApTCiRGKCGFBbSAACiIAZgALKJqIIiBiIAMIaCYYIKDFkIBhBACKBIQGZDFBDAiABoQAJioGAiIARGQBElYBLhFBSCUiGApkEiAGUKEiSBggMYKMJhqEAqZJIJIiCJIQEkgAiGRFDhbACikDIAoNJEIqEANEBATFJqkBSCYYkUEBCEKEqRCASBmAogAiRVEEIhBBCGCiGiGSKTJCVVBiAMKAJaICgBAApQAhJFhZCMiIqJkKIgkAgVBVkJCUmCQtAISTANkCEJAoASBQoARGCgFgJkAhQIJAiJKACiYhIhJVIAIIABRhgAqASAIKKECAIJKiJFkIqJKIVYkIpFAqoUAABUigiCGRFECiMkgkIkZEFMGUFaAGiIkiYSCJCoCRIAhoQkSiCJAAikFIGBIiEoMqShCiiiRIqhGNAIqGJSgAQhJaSBIVVFQkGSQIqJkABiYkKhAGTiIAqCIJCkiBQhFJQKkEqEIJYCCIkGQKEqTCgKQCJpFJIEqJihhUgJCBCohGBIQkYACGACECSGJKCACIoSKSFpCJggJCiCJaIiAIioKgIoJqKhhBiJqipIIClCQgBqyJoAqaIhJCCEqaBRiLAJkikRACgBCAIlSiCRAIAiVJCijAIhFCCIATBFZiJEQAQGAAAAECECoAAAYEJEiSKCJIgkQIElJAJKJCQJgGAJAKiCiCZCJURFBkiqAoiiGCICIlSiYiiASBqiohAmAFIhAhEASkAoA0gKJJJgiECiIAhiEABiKChiMCEIZAoBoQgIZRUiAiAAoIKBiAKkSABgFCiQIgihiVBBiSJFAAASAiJTBgAACiBMiSAAJKJBAiAAiJqCCIiioiJEIiARqQAihCIBAiAAAAAiIACiAiAqgYBJJCAyIkBKAAAZAAJRAlJUIIICIoJijIAAhFSIBgBBJKAAokGAIgGJCiigICgCCIBJIiEAkkiJCQIAAAAQBFiQggFIKBIAEpJCQoiAJikCBgiICCJAiAioiAYoBCJJAQhBEJCBIhIiAiJJoCgBiJAAiAIgJASgIaBIAiAAiJiICCgAAMiIAKJCQCiIGCJYoQgAkSoiGKiSAEJJiEAIBSCRAiAIBIAiAoIJISAAiIAiJqACISCgBAAAAJIoiCAAIRICAqCCIgAJAAiJgKIRAiJJiCAACIAJFIiAJJJiCCAAImCIJiIYIiAShEgiIAAgCAAhBCSCAKAAAAAAAUCIJCCiAAJIiAAiQAFIBCJJBCAKCAIiCJJIQAAQYIJAAiAAAAAAiJJQiCIAgAAAAIiAAAAAiAiAKJIQAAAIBBiAIiKAAQAAAAiIAAAAiAAQIAQAAJiAFAAAAAAAABiJiCJAAAAAAAAAAAAAAAAAAAAAAAA’);
-background-size: contain;
-background-repeat: no-repeat;
-background-position: bottom right;
-opacity: 0.10;
-pointer-events: none;
-z-index: 0;
-}
 </style>
 
 </head>
 <body>
 
 <!-- HEADER -->
-
 <div class="header">
   <div style="display:flex;align-items:center;gap:10px;">
     <img src="https://raw.githubusercontent.com/ozeeer/olab_packages/main/ozbolat_lab_logo.png" style="height:24px;width:auto;" alt="Ozbolat Lab"/>
@@ -182,7 +151,6 @@ z-index: 0;
 </div>
 
 <!-- ADD BUTTON -->
-
 <div class="bottom-bar">
   <button class="bottom-add-btn" onclick="openAdd()">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -191,12 +159,11 @@ z-index: 0;
 </div>
 
 <!-- CONTENT -->
-
 <div class="content">
   <div class="stats">
     <div class="stat"><div class="stat-n" id="s-total">—</div><div class="stat-l">Total</div></div>
+    <div class="stat"><div class="stat-n" id="s-pending">—</div><div class="stat-l">Not Requested</div></div>
     <div class="stat"><div class="stat-n" id="s-req">—</div><div class="stat-l">Requested</div></div>
-    <div class="stat"><div class="stat-n" id="s-ord">—</div><div class="stat-l">Ordered</div></div>
   </div>
 
   <div class="search-wrap">
@@ -209,7 +176,6 @@ z-index: 0;
 </div>
 
 <!-- ADD SHEET -->
-
 <div class="overlay" id="add-ov" onclick="if(event.target===this)closeAdd()">
   <div class="sheet">
     <div class="handle"></div>
@@ -225,18 +191,17 @@ z-index: 0;
         <div class="field"><label>Quantity *</label><input id="f-qty" placeholder="e.g. 2 bottles"/></div>
         <div class="field"><label>Catalog # / Vendor</label><input id="f-cat" placeholder="e.g. Sigma #P5493"/></div>
       </div>
-      <div class="field"><label>Requester *</label><input id="f-req" placeholder="Your name"/></div>
+      <div class="field"><label>Added by *</label><input id="f-req" placeholder="Your name"/></div>
       <div class="field"><label>Notes / Reason</label><textarea id="f-notes" placeholder="Why is it needed? Running low? Expiring?"></textarea></div>
       <div class="btns">
         <button class="btn" onclick="closeAdd()">Cancel</button>
-        <button class="btn btn-g" id="savebtn" onclick="saveRequest()">Submit Request</button>
+        <button class="btn btn-g" id="savebtn" onclick="saveRequest()">Add to List</button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- DETAIL SHEET -->
-
 <div class="overlay" id="det-ov" onclick="if(event.target===this)closeDet()">
   <div class="sheet">
     <div class="handle"></div>
@@ -252,22 +217,7 @@ z-index: 0;
   </div>
 </div>
 
-<!-- PIN SHEET -->
-
-<div class="pin-overlay" id="pin-ov">
-  <div class="pin-box">
-    <h2>Mark as Ordered</h2>
-    <p>Enter the lab PIN to confirm this item has been ordered in Quartzy.</p>
-    <div class="field" style="margin-bottom:6px;"><label>Ordered by</label><input id="pin-name" placeholder="Your name" style="background:#f0f0ee;"/></div>
-    <input class="pin-input" type="password" id="pin-input" maxlength="8" placeholder="••••" onkeydown="if(event.key==='Enter')confirmOrder()"/>
-    <div class="pin-error" id="pin-error">Wrong PIN. Try again.</div>
-    <button class="pin-submit" onclick="confirmOrder()">Confirm</button>
-    <button onclick="document.getElementById('pin-ov').classList.remove('open')" style="width:100%;margin-top:8px;padding:13px;background:none;border:1px solid #e0e0de;border-radius:8px;font-size:15px;font-weight:500;font-family:inherit;cursor:pointer;color:#666;">Cancel</button>
-  </div>
-</div>
-
 <!-- NAME OVERLAY -->
-
 <div class="name-overlay" id="name-overlay">
   <div class="name-box">
     <h2>Welcome 👋</h2>
@@ -278,28 +228,20 @@ z-index: 0;
 </div>
 
 <!-- LIGHTBOX -->
-
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
   <button class="lightbox-close" onclick="closeLightbox()">×</button>
   <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()"/>
 </div>
 
 <!-- FOOTER -->
-
 <div style="position:fixed;bottom:0;left:0;right:0;text-align:center;padding:8px 16px;font-size:11px;color:#bbb;letter-spacing:0.04em;background:#f7f7f5;border-top:1px solid #e8e8e6;z-index:5;">
   Ozbolat Lab &nbsp;·&nbsp; 2026 &nbsp;·&nbsp; Made by Ozer
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-// ── CONFIG ──────────────────────────────────────────────────────
-const SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE'; // ← paste after deploying
-const PIN = '1234'; // ← change this (client-side only; for real security use Apps Script)
-// ────────────────────────────────────────────────────────────────
-
 firebase.initializeApp({
   apiKey: "AIzaSyBSKapCk66FSg7ruOman4WRXzQbRJ_j7kk",
   authDomain: "inventory-ol.firebaseapp.com",
@@ -318,7 +260,6 @@ let imgs = [];
 let detId = null;
 let filter = 'all';
 let userName = localStorage.getItem('lab_order_user') || '';
-let pendingId = null;
 
 // ── Name ──
 function showNamePrompt() {
@@ -357,15 +298,15 @@ ordersRef.on('value', snap => {
 
 function updateStats() {
   document.getElementById('s-total').textContent = items.length;
+  document.getElementById('s-pending').textContent = items.filter(i => i.status === 'Not Requested').length;
   document.getElementById('s-req').textContent = items.filter(i => i.status === 'Requested').length;
-  document.getElementById('s-ord').textContent = items.filter(i => i.status === 'Ordered').length;
 }
 
 function renderChips() {
   const html = [
     `<button class="chip${filter==='all'?' on':''}" onclick="setFilter('all')">All</button>`,
-    `<button class="chip${filter==='Requested'?' on':''}\" onclick="setFilter('Requested')">Requested</button>`,
-    `<button class="chip ordered${filter==='Ordered'?' on':''}\" onclick="setFilter('Ordered')">Ordered ✓</button>`
+    `<button class="chip${filter==='Not Requested'?' on':''}" onclick="setFilter('Not Requested')">Not Requested</button>`,
+    `<button class="chip requested${filter==='Requested'?' on':''}" onclick="setFilter('Requested')">Requested ✓</button>`
   ].join('');
   document.getElementById('chips').innerHTML = html;
 }
@@ -384,7 +325,7 @@ function renderList() {
     document.getElementById('list').innerHTML = `<div class="empty">
       <div style="font-size:36px">📋</div>
       <h3>${items.length === 0 ? 'No requests yet' : 'No matches'}</h3>
-      <p style="font-size:13px">${items.length === 0 ? 'Tap the button above to submit a request' : 'Try a different search'}</p>
+      <p style="font-size:13px">${items.length === 0 ? 'Tap the button above to add a request' : 'Try a different search'}</p>
     </div>`;
     return;
   }
@@ -394,9 +335,9 @@ function renderList() {
       ? `<div class="thumb"><img src="${it.photo}" alt=""/></div>`
       : `<div class="thumb"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="1.4"/><path d="M9 9h6M9 12h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></div>`;
     const isNew = Date.now() - it.ts < 86400000;
-    const statusTag = it.status === 'Ordered'
-      ? `<span class="tag tag-ord">✓ Ordered</span>`
-      : `<span class="tag tag-req">Requested</span>`;
+    const statusTag = it.status === 'Requested'
+      ? `<span class="tag tag-req">✓ Requested</span>`
+      : `<span class="tag tag-pending">Not Requested</span>`;
     const sub = [it.qty, it.catalog].filter(Boolean).join(' · ');
     return `<div class="item" onclick="openDet('${it.id}')">
       ${thumb}
@@ -422,7 +363,7 @@ function openAdd() {
   document.getElementById('f-req').value = userName || '';
   document.getElementById('f-notes').value = '';
   document.getElementById('savebtn').disabled = false;
-  document.getElementById('savebtn').textContent = 'Submit Request';
+  document.getElementById('savebtn').textContent = 'Add to List';
   renderStrip();
   document.getElementById('add-ov').classList.add('open');
 }
@@ -472,7 +413,7 @@ async function saveRequest() {
   if (!name) { document.getElementById('f-name').focus(); return; }
   if (!qty) { document.getElementById('f-qty').focus(); return; }
   const btn = document.getElementById('savebtn');
-  btn.disabled = true; btn.textContent = 'Submitting…';
+  btn.disabled = true; btn.textContent = 'Saving…';
   try {
     await ordersRef.push({
       name,
@@ -481,15 +422,15 @@ async function saveRequest() {
       requester: req || userName || 'Unknown',
       notes: document.getElementById('f-notes').value.trim(),
       photo: imgs[0] || '',
-      status: 'Requested',
+      status: 'Not Requested',
       ts: Date.now(),
-      orderedBy: '',
-      orderedAt: ''
+      requestedBy: '',
+      requestedAt: ''
     });
     closeAdd();
   } catch(e) {
     alert('Save failed: ' + e.message);
-    btn.disabled = false; btn.textContent = 'Submit Request';
+    btn.disabled = false; btn.textContent = 'Add to List';
   }
 }
 
@@ -504,60 +445,57 @@ function openDet(id) {
   const rows = [
     ['Quantity', it.qty],
     ['Catalog / Vendor', it.catalog],
-    ['Requester', it.requester],
+    ['Added by', it.requester],
     ['Notes', it.notes],
     ['Status', it.status],
-    ['Ordered by', it.orderedBy],
-    ['Ordered at', it.orderedAt ? fmtDateTime(parseInt(it.orderedAt)) : ''],
-    ['Requested', fmtDateTime(it.ts)]
+    ['Requested by', it.requestedBy],
+    ['Requested at', it.requestedAt ? fmtDateTime(parseInt(it.requestedAt)) : ''],
+    ['Added', fmtDateTime(it.ts)]
   ].filter(([,v]) => v);
   document.getElementById('d-rows').innerHTML = rows.map(([k,v]) =>
     `<div class="drow"><span class="dk">${esc(k)}</span><span class="dv">${esc(v)}</span></div>`
   ).join('');
 
   const btns = document.getElementById('d-btns');
-  if (it.status === 'Requested') {
+  if (it.status === 'Not Requested') {
     btns.innerHTML = `
       <button class="btn btn-r" onclick="delItem()">Delete</button>
-      <button class="btn btn-blue" onclick="openPin('${id}')">Mark Ordered</button>`;
+      <button class="btn btn-amber" onclick="markRequested('${id}')">Mark as Requested</button>`;
   } else {
     btns.innerHTML = `
       <button class="btn btn-r" onclick="delItem()">Delete</button>
+      <button class="btn" onclick="markNotRequested('${id}')">Undo</button>
       <button class="btn btn-g" onclick="closeDet()">Done</button>`;
   }
   document.getElementById('det-ov').classList.add('open');
 }
 function closeDet() { document.getElementById('det-ov').classList.remove('open'); detId = null; }
+
 async function delItem() {
   if (!detId || !confirm('Delete this request?')) return;
   await ordersRef.child(detId).remove();
   closeDet();
 }
 
-// ── PIN ──
-function openPin(id) {
-  pendingId = id;
-  document.getElementById('pin-input').value = '';
-  document.getElementById('pin-name').value = userName || '';
-  document.getElementById('pin-error').style.display = 'none';
-  document.getElementById('pin-ov').classList.add('open');
-  document.getElementById('det-ov').classList.remove('open');
-  setTimeout(() => document.getElementById('pin-input').focus(), 100);
-}
-async function confirmOrder() {
-  const pin = document.getElementById('pin-input').value;
-  const name = document.getElementById('pin-name').value.trim();
-  if (pin !== PIN) {
-    document.getElementById('pin-error').style.display = 'block';
-    return;
-  }
+async function markRequested(id) {
   try {
-    await ordersRef.child(pendingId).update({
-      status: 'Ordered',
-      orderedBy: name || userName || 'Unknown',
-      orderedAt: String(Date.now())
+    await ordersRef.child(id).update({
+      status: 'Requested',
+      requestedBy: userName || 'Unknown',
+      requestedAt: String(Date.now())
     });
-    document.getElementById('pin-ov').classList.remove('open');
+    closeDet();
+  } catch(e) { alert('Update failed: ' + e.message); }
+}
+
+async function markNotRequested(id) {
+  try {
+    await ordersRef.child(id).update({
+      status: 'Not Requested',
+      requestedBy: '',
+      requestedAt: ''
+    });
+    closeDet();
   } catch(e) { alert('Update failed: ' + e.message); }
 }
 
