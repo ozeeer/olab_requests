@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Deepak's Bioprinting Quest</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#030d12;font-family:'Press Start 2P',monospace;touch-action:none}
+
+/* SCREENS */
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.screen.hidden{display:none}
+
+/* TITLE */
+#title{background:radial-gradient(ellipse at 50% 60%, #041a24 0%, #030d12 70%)}
+.title-glow{position:absolute;top:35%;left:50%;transform:translate(-50%,-50%);width:300px;height:300px;background:radial-gradient(circle,rgba(0,200,180,0.12) 0%,transparent 70%);border-radius:50%;animation:tglow 3s ease-in-out infinite}
+@keyframes tglow{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.2)}}
+.title-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px}
+.t-lab{font-size:8px;color:#00e5cc;letter-spacing:4px;opacity:0.8}
+.t-h1{font-size:clamp(16px,5vw,28px);color:#fff;line-height:1.5;text-align:center;text-shadow:0 0 20px rgba(0,220,200,0.6)}
+.t-h1 span{color:#00e5cc}
+.t-sub{font-size:8px;color:#4db8b0;letter-spacing:2px;text-align:center;line-height:1.8}
+.t-badge{background:rgba(0,180,160,0.15);border:1px solid rgba(0,220,200,0.3);padding:10px 16px;font-size:7px;color:#00e5cc;letter-spacing:2px;line-height:2;text-align:center;max-width:320px}
+.t-start{margin-top:8px;background:none;border:2px solid #00e5cc;color:#00e5cc;font-family:'Press Start 2P',monospace;font-size:10px;padding:14px 28px;cursor:pointer;letter-spacing:2px;animation:blink 1s infinite;min-height:48px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* GAME */
+#game{background:#030d12;flex-direction:column;padding:0}
+
+/* HUD */
+.hud{display:flex;align-items:stretch;background:#060f16;border-bottom:1px solid rgba(0,200,180,0.2);flex-shrink:0;width:100%}
+.hud-player{display:flex;align-items:center;gap:8px;padding:6px 10px;border-right:1px solid rgba(0,200,180,0.15)}
+.hud-emo{font-size:20px}
+.hud-info{display:flex;flex-direction:column;gap:3px}
+.hud-name{font-size:7px;color:#ffd700}
+.hud-lvl{font-size:6px;color:#4db8b0}
+.hud-mid{flex:1;display:flex;flex-direction:column;justify-content:center;padding:4px 10px;border-right:1px solid rgba(0,200,180,0.15);min-width:0}
+.hud-obj{font-size:6px;color:#4db8b0;margin-bottom:2px}
+.hud-organ{font-size:8px;color:#00e5cc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hud-right{display:flex;flex-direction:column;gap:3px;padding:5px 10px;justify-content:center;flex-shrink:0}
+.hud-stat{font-size:7px;white-space:nowrap}
+.hud-bubbles{color:#88ffee}
+.hud-len{color:#ffd700}
+.hud-timer-wrap{height:3px;background:rgba(0,200,180,0.1);flex-shrink:0}
+.hud-timer-bar{height:100%;background:#00e5cc;transition:width 0.1s linear;width:100%}
+
+/* PROGRESS */
+.prog-wrap{display:flex;align-items:center;gap:8px;padding:4px 10px;background:#060f16;border-bottom:1px solid rgba(0,200,180,0.15);flex-shrink:0}
+.prog-lbl{font-size:6px;color:#4db8b0;white-space:nowrap}
+.prog-bar{flex:1;height:8px;background:rgba(0,200,180,0.1);border:1px solid rgba(0,200,180,0.2);position:relative}
+.prog-fill{height:100%;background:linear-gradient(90deg,#00805a,#00e5cc);transition:width 0.3s;width:0%}
+.prog-pct{font-size:7px;color:#00e5cc;white-space:nowrap;min-width:36px;text-align:right}
+
+/* CANVAS */
+#canvas-wrap{flex:1;position:relative;overflow:hidden;width:100%}
+canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+
+/* MOBILE DPAD */
+.dpad{position:absolute;bottom:12px;right:12px;z-index:20;display:none}
+@media(pointer:coarse){.dpad{display:grid}}
+.dpad{grid-template-columns:44px 44px 44px;grid-template-rows:44px 44px 44px;gap:3px}
+.dpad-btn{background:rgba(0,200,180,0.12);border:1px solid rgba(0,200,180,0.3);color:#00e5cc;font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:4px;user-select:none;-webkit-user-select:none;min-width:44px;min-height:44px}
+.dpad-btn:active{background:rgba(0,200,180,0.3)}
+.dpad-center{background:rgba(0,200,180,0.05);border-color:rgba(0,200,180,0.1)}
+
+/* PAUSE btn */
+.pause-btn{position:absolute;top:6px;right:8px;background:none;border:1px solid rgba(0,200,180,0.3);color:#4db8b0;font-family:'Press Start 2P',monospace;font-size:8px;padding:6px 10px;cursor:pointer;z-index:20}
+
+/* SPEECH */
+.speech{position:absolute;z-index:30;background:#fffde7;border:2px solid #333;border-radius:3px;padding:5px 8px;font-size:7px;color:#333;max-width:130px;line-height:1.7;pointer-events:none;animation:spop 0.15s ease-out;box-shadow:2px 2px 0 #333;bottom:clamp(80px,18vw,130px);left:10px}
+.speech::after{content:'';position:absolute;bottom:-10px;left:12px;border:5px solid transparent;border-top-color:#333}
+.speech::before{content:'';position:absolute;bottom:-7px;left:14px;border:4px solid transparent;border-top-color:#fffde7;z-index:1}
+@keyframes spop{0%{transform:scale(0);transform-origin:bottom left}100%{transform:scale(1)}}
+
+/* OVERLAY (level complete / game over / pause) */
+.overlay{position:fixed;inset:0;background:rgba(2,10,16,0.88);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
+.overlay.hidden{display:none}
+.ov-box{background:#060f16;border:2px solid rgba(0,200,180,0.4);padding:24px 20px;text-align:center;max-width:340px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
+.ov-organ{font-size:52px;animation:ofloat 2s ease-in-out infinite}
+@keyframes ofloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.ov-badge{font-size:7px;color:#cc44ff;background:rgba(140,30,200,0.3);padding:4px 12px;letter-spacing:2px}
+.ov-title{font-size:clamp(14px,4vw,20px);color:#00e5cc;text-shadow:0 0 16px rgba(0,220,200,0.5);line-height:1.4}
+.ov-sub{font-size:8px;color:#4db8b0;line-height:1.8}
+.ov-stat{font-size:9px;color:#ffd700}
+.ov-btn{background:#00805a;color:#fff;border:none;font-family:'Press Start 2P',monospace;font-size:9px;padding:14px 0;cursor:pointer;border-bottom:3px solid #004430;min-height:48px;width:100%;letter-spacing:2px}
+.ov-btn:active{transform:translateY(2px);border-bottom-width:1px}
+.ov-btn.red{background:#cc2222;border-bottom-color:#881111}
+.ov-btn-row{display:flex;gap:10px;width:100%}
+</style>
+</head>
+<body>
+
+<!-- TITLE -->
+<div class="screen" id="title">
+  <div class="title-glow"></div>
+  <div class="title-inner">
+    <div class="t-lab">OZBOLAT LAB PRESENTS</div>
+    <div class="t-h1">DEEPAK'S<br><span>BIOPRINTING</span><br>QUEST</div>
+    <div class="t-sub">PRINT AIR CHANNELS IN SUPPORT BATH<br>BUILD VASCULARIZED ORGANS</div>
+    <div class="t-badge">
+      🖨️ GUIDE THE PRINT HEAD<br>
+      💧 COLLECT BUBBLES TO GROW CHANNELS<br>
+      🫀 FILL THE ORGAN WITH VASCULARITY
+    </div>
+    <button class="t-start" id="start-btn">▶ START PRINTING</button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div class="screen hidden" id="game">
+  <div class="hud">
+    <div class="hud-player">
+      <div class="hud-emo">🧑‍🔬</div>
+      <div class="hud-info">
+        <div class="hud-name">DEEPAK G.</div>
+        <div class="hud-lvl" id="hud-lvl">LVL 1</div>
+      </div>
+    </div>
+    <div class="hud-mid">
+      <div class="hud-obj">PRINTING INTO SUPPORT BATH:</div>
+      <div class="hud-organ" id="hud-organ">VASCULARIZED LIVER</div>
+    </div>
+    <div class="hud-right">
+      <div class="hud-stat hud-bubbles">💧 <span id="hud-bubbles">0</span></div>
+      <div class="hud-stat hud-len">📏 <span id="hud-len">0</span></div>
+    </div>
+  </div>
+  <div class="prog-wrap">
+    <div class="prog-lbl">VASCULARITY</div>
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
+    <div class="prog-pct" id="prog-pct">0%</div>
+  </div>
+  <div id="canvas-wrap">
+    <canvas id="bg-canvas"></canvas>
+    <canvas id="main-canvas"></canvas>
+    <div class="dpad">
+      <div></div>
+      <div class="dpad-btn" id="btn-up">▲</div>
+      <div></div>
+      <div class="dpad-btn" id="btn-left">◀</div>
+      <div class="dpad-center"></div>
+      <div class="dpad-btn" id="btn-right">▶</div>
+      <div></div>
+      <div class="dpad-btn" id="btn-down">▼</div>
+      <div></div>
+    </div>
+    <button class="pause-btn" id="pause-btn">⏸</button>
+  </div>
+</div>
+
+<!-- OVERLAYS -->
+<div class="overlay hidden" id="ov-levelcomplete">
+  <div class="ov-box">
+    <div class="ov-organ" id="ov-organ">🫀</div>
+    <div class="ov-badge">ORGAN VASCULARIZED!</div>
+    <div class="ov-title" id="ov-title">VASCULARIZED<br>LIVER</div>
+    <div class="ov-sub" id="ov-sub">AIR CHANNELS: COMPLETE<br>HOPE FOR HUMANITY: +1000</div>
+    <div class="ov-stat" id="ov-stat">SCIENCE PTS: 0</div>
+    <button class="ov-btn" id="ov-next-btn">NEXT ORGAN →</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="ov-gameover">
+  <div class="ov-box">
+    <div style="font-size:40px">💉</div>
+    <div class="ov-title" style="color:#ff4444">NEEDLE CLOG!</div>
+    <div class="ov-sub" id="go-sub">THE PRINT HEAD HIT A WALL.<br>RECALIBRATING...</div>
+    <div class="ov-stat">SCIENCE PTS: <span id="go-score">0</span></div>
+    <div class="ov-btn-row">
+      <button class="ov-btn red" id="go-restart-btn">↺ RETRY</button>
+      <button class="ov-btn" id="go-title-btn">TITLE</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="ov-pause">
+  <div class="ov-box">
+    <div style="font-size:36px">⏸</div>
+    <div class="ov-title">PAUSED</div>
+    <div class="ov-sub">SUPPORT BATH COOLING DOWN...</div>
+    <div class="ov-btn-row">
+      <button class="ov-btn" id="pause-resume-btn">▶ RESUME</button>
+      <button class="ov-btn red" id="pause-title-btn">TITLE</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── LEVELS ───────────────────────────────────────────────────
+const LEVELS = [
+  { organ:'🫀', name:'VASCULARIZED\nHEART',   hope:'+1000', sciMult:1,   speed:2.8, bubbleRate:1800, bubblesNeeded:20, timeLimit:60 },
+  { organ:'🫁', name:'VASCULARIZED\nLUNG',    hope:'+1500', sciMult:1.3, speed:3.2, bubbleRate:1600, bubblesNeeded:28, timeLimit:55 },
+  { organ:'🩺', name:'BIOPRINTED\nLIVER',     hope:'+2000', sciMult:1.6, speed:3.6, bubbleRate:1400, bubblesNeeded:36, timeLimit:50 },
+  { organ:'🫘', name:'FUNCTIONAL\nKIDNEY',    hope:'+2500', sciMult:2,   speed:4.0, bubbleRate:1200, bubblesNeeded:45, timeLimit:45 },
+  { organ:'🧠', name:'NEURAL\nSCAFFOLD',      hope:'+9001', sciMult:2.5, speed:4.5, bubbleRate:1000, bubblesNeeded:55, timeLimit:40 },
+];
+
+const SPEECHES = [
+  'CHANNEL\nGROWING! 🖨️',
+  'BIOINK\nFLOWING!',
+  'SUPPORT\nBATH: STABLE',
+  'FRESH\nPRINTING!',
+  'AIR IN\nSILICONE!',
+  'VASCULARITY\nFORMING!',
+  'DEEPAK\nMODE: ON 😎',
+  'PRINT LIFE.\nSAVE LIVES!',
+];
+
+// ── CANVAS SETUP ─────────────────────────────────────────────
+const bgCanvas = document.getElementById('bg-canvas');
+const bgCtx = bgCanvas.getContext('2d');
+const canvas = document.getElementById('main-canvas');
+const ctx = canvas.getContext('2d');
+const wrap = document.getElementById('canvas-wrap');
+
+// Grid cell size
+const CELL = 20;
+let COLS, ROWS, W, H;
+let hudH = 0;
+
+function resizeCanvases() {
+  const rect = wrap.getBoundingClientRect();
+  W = rect.width; H = rect.height;
+  bgCanvas.width = canvas.width = W;
+  bgCanvas.height = canvas.height = H;
+  COLS = Math.floor(W / CELL);
+  ROWS = Math.floor(H / CELL);
+  drawBg();
+}
+
+// ── SUPPORT BATH BACKGROUND ───────────────────────────────────
+let bgParticles = [];
+function initBgParticles() {
+  bgParticles = [];
+  for (let i = 0; i < 60; i++) {
+    bgParticles.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 2 + 0.5,
+      vy: -(Math.random() * 0.3 + 0.1),
+      alpha: Math.random() * 0.25 + 0.05,
+    });
+  }
+}
+
+function drawBg() {
+  bgCtx.clearRect(0, 0, W, H);
+  // Support bath gradient — aqueous gel look
+  const grad = bgCtx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#041520');
+  grad.addColorStop(0.5, '#041a28');
+  grad.addColorStop(1, '#030f1c');
+  bgCtx.fillStyle = grad;
+  bgCtx.fillRect(0, 0, W, H);
+
+  // subtle grid (like the microscope grid)
+  bgCtx.strokeStyle = 'rgba(0,180,160,0.06)';
+  bgCtx.lineWidth = 0.5;
+  for (let x = 0; x < W; x += CELL) { bgCtx.beginPath(); bgCtx.moveTo(x, 0); bgCtx.lineTo(x, H); bgCtx.stroke(); }
+  for (let y = 0; y < H; y += CELL) { bgCtx.beginPath(); bgCtx.moveTo(0, y); bgCtx.lineTo(W, y); bgCtx.stroke(); }
+
+  // floating micro-particles in bath
+  for (const p of bgParticles) {
+    bgCtx.beginPath();
+    bgCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    bgCtx.fillStyle = `rgba(0,210,190,${p.alpha})`;
+    bgCtx.fill();
+  }
+}
+
+function animateBg() {
+  if (!gameRunning) return;
+  for (const p of bgParticles) {
+    p.y += p.vy;
+    if (p.y < -4) { p.y = H + 4; p.x = Math.random() * W; }
+  }
+  drawBg();
+  requestAnimationFrame(animateBg);
+}
+
+// ── GAME STATE ────────────────────────────────────────────────
+let snake, dir, nextDir, trail, bubbles, bubblesCollected;
+let gameRunning = false, gamePaused = false;
+let level = 0, sciPts = 0, totalSciPts = 0;
+let gameLoop, bubbleTimer, speechTimer;
+let timeLeft, timerInterval;
+
+function initGame() {
+  const cx = Math.floor(COLS / 2);
+  const cy = Math.floor(ROWS / 2);
+  snake = [{ x: cx, y: cy }];
+  dir = { x: 1, y: 0 };
+  nextDir = { x: 1, y: 0 };
+  trail = new Set();
+  trail.add(`${cx},${cy}`);
+  bubbles = [];
+  bubblesCollected = 0;
+  sciPts = 0;
+  gameRunning = true;
+  gamePaused = false;
+
+  const L = LEVELS[level];
+  timeLeft = L.timeLimit;
+
+  updateHUD();
+  spawnBubble();
+  bubbleTimer = setInterval(spawnBubble, L.bubbleRate);
+  timerInterval = setInterval(tickTimer, 1000);
+  showSpeech('SUPPORT BATH\nREADY! 🖨️');
+  requestAnimationFrame(gameLoopFn);
+  requestAnimationFrame(animateBg);
+}
+
+function tickTimer() {
+  timeLeft--;
+  const L = LEVELS[level];
+  const pct = Math.max(0, timeLeft / L.timeLimit);
+  document.getElementById('hud-timer-bar')
+    ? document.getElementById('hud-timer-bar').style.width = (pct * 100) + '%'
+    : null;
+  if (timeLeft <= 0) triggerGameOver('TIME IN BATH EXPIRED!\nRE-INJECT AND TRY AGAIN.');
+}
+
+// ── BUBBLES ───────────────────────────────────────────────────
+function spawnBubble() {
+  if (!gameRunning || gamePaused) return;
+  // Bubbles spawn at random positions, drift upward (buoyancy in support bath)
+  const margin = 2;
+  const gx = Math.floor(Math.random() * (COLS - margin * 2)) + margin;
+  const gy = Math.floor(Math.random() * (ROWS - margin * 2)) + margin;
+  // don't spawn on snake
+  if (trail.has(`${gx},${gy}`)) return;
+
+  bubbles.push({
+    gx, gy,
+    // float upward slowly each N frames
+    floatTimer: 0,
+    floatInterval: Math.floor(Math.random() * 40 + 50), // frames between rises
+    alpha: 0,
+    fadeIn: true,
+    type: Math.random() < 0.12 ? 'big' : 'normal', // big = worth 3
+  });
+}
+
+// ── GAME LOOP ─────────────────────────────────────────────────
+let lastTime = 0;
+let frameAcc = 0;
+
+function gameLoopFn(ts) {
+  if (!gameRunning) return;
+  if (gamePaused) { requestAnimationFrame(gameLoopFn); return; }
+
+  const dt = ts - lastTime; lastTime = ts;
+  const L = LEVELS[level];
+  const frameInterval = 1000 / (L.speed * 5); // ms per step
+
+  frameAcc += dt;
+  if (frameAcc >= frameInterval) {
+    frameAcc -= frameInterval;
+    stepSnake();
+  }
+
+  // float bubbles
+  for (const b of bubbles) {
+    b.floatTimer++;
+    if (b.floatTimer >= b.floatInterval) {
+      b.floatTimer = 0;
+      b.gy = Math.max(1, b.gy - 1); // rise up
+    }
+    if (b.fadeIn && b.alpha < 1) b.alpha = Math.min(1, b.alpha + 0.05);
+  }
+
+  drawGame();
+  requestAnimationFrame(gameLoopFn);
+}
+
+function stepSnake() {
+  dir = { ...nextDir };
+  const head = snake[0];
+  const nx = head.x + dir.x;
+  const ny = head.y + dir.y;
+
+  // wall collision
+  if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) {
+    triggerGameOver('PRINT HEAD HIT\nTHE BATH CONTAINER!\nRESET REQUIRED.');
+    return;
+  }
+  // self collision
+  if (trail.has(`${nx},${ny}`)) {
+    triggerGameOver('CHANNEL OVERLAP!\nAIR BUBBLE BURST.\nABORTING PRINT.');
+    return;
+  }
+
+  const newHead = { x: nx, y: ny };
+  snake.unshift(newHead);
+  trail.add(`${nx},${ny}`);
+
+  // check bubble collection
+  let grew = false;
+  const L = LEVELS[level];
+  for (let i = bubbles.length - 1; i >= 0; i--) {
+    const b = bubbles[i];
+    if (b.gx === nx && b.gy === ny) {
+      const pts = b.type === 'big' ? 3 : 1;
+      bubblesCollected += pts;
+      sciPts += Math.round(pts * 50 * L.sciMult);
+      totalSciPts += Math.round(pts * 50 * L.sciMult);
+      bubbles.splice(i, 1);
+      grew = true;
+      if (Math.random() < 0.25) showSpeech(SPEECHES[Math.floor(Math.random() * SPEECHES.length)]);
+    }
+  }
+
+  if (!grew) {
+    // remove tail
+    const tail = snake.pop();
+    trail.delete(`${tail.x},${tail.y}`);
+  }
+
+  updateHUD();
+
+  // win condition
+  if (bubblesCollected >= L.bubblesNeeded) {
+    triggerLevelComplete();
+  }
+}
+
+// ── DRAW ──────────────────────────────────────────────────────
+// Tube radii — outer wall, lumen (air space), inner highlight
+const TUBE_R     = CELL * 0.42;  // outer silicone wall
+const LUMEN_R    = CELL * 0.26;  // hollow air interior
+const NODE_R     = CELL * 0.50;  // junction sphere radius
+const LUMEN_NODE = CELL * 0.32;
+
+function segPx(seg) {
+  return { x: seg.x * CELL + CELL / 2, y: seg.y * CELL + CELL / 2 };
+}
+
+function drawChannelSegment(ax, ay, bx, by) {
+  // Outer silicone wall — semi-transparent warm white
+  ctx.beginPath();
+  ctx.moveTo(ax, ay);
+  ctx.lineTo(bx, by);
+  ctx.strokeStyle = 'rgba(180,240,230,0.55)';
+  ctx.lineWidth = TUBE_R * 2;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Mid gel layer — teal tint
+  ctx.beginPath();
+  ctx.moveTo(ax, ay);
+  ctx.lineTo(bx, by);
+  ctx.strokeStyle = 'rgba(0,160,140,0.45)';
+  ctx.lineWidth = TUBE_R * 1.4;
+  ctx.stroke();
+
+  // Hollow lumen — the actual AIR channel (nearly transparent, just a faint bright core)
+  ctx.beginPath();
+  ctx.moveTo(ax, ay);
+  ctx.lineTo(bx, by);
+  ctx.strokeStyle = 'rgba(200,255,248,0.18)';
+  ctx.lineWidth = LUMEN_R * 2;
+  ctx.stroke();
+
+  // Lumen center line — thin bright air thread
+  ctx.beginPath();
+  ctx.moveTo(ax, ay);
+  ctx.lineTo(bx, by);
+  ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+}
+
+function drawNode(px, py, isHead) {
+  const or = isHead ? NODE_R * 1.15 : NODE_R;
+  const lr = isHead ? LUMEN_NODE * 1.1 : LUMEN_NODE;
+
+  // Outer silicone sphere
+  const wallGrad = ctx.createRadialGradient(px - or*0.2, py - or*0.2, or*0.1, px, py, or);
+  wallGrad.addColorStop(0, 'rgba(220,255,250,0.75)');
+  wallGrad.addColorStop(0.5, 'rgba(0,180,160,0.55)');
+  wallGrad.addColorStop(1, 'rgba(0,80,70,0.35)');
+  ctx.beginPath();
+  ctx.arc(px, py, or, 0, Math.PI * 2);
+  ctx.fillStyle = wallGrad;
+  ctx.fill();
+
+  // Lumen sphere — hollow air pocket
+  const lumenGrad = ctx.createRadialGradient(px - lr*0.25, py - lr*0.25, lr*0.05, px, py, lr);
+  lumenGrad.addColorStop(0, 'rgba(255,255,255,0.45)');
+  lumenGrad.addColorStop(0.4, 'rgba(180,255,245,0.15)');
+  lumenGrad.addColorStop(1, 'rgba(0,200,180,0.08)');
+  ctx.beginPath();
+  ctx.arc(px, py, lr, 0, Math.PI * 2);
+  ctx.fillStyle = lumenGrad;
+  ctx.fill();
+
+  if (isHead) {
+    // Nozzle glow pulse
+    ctx.shadowBlur = 18;
+    ctx.shadowColor = '#00e5cc';
+    ctx.beginPath();
+    ctx.arc(px, py, or * 0.98, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(0,229,204,0.9)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Extruding droplet indicator
+    ctx.beginPath();
+    ctx.arc(px, py, or * 0.22, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+  }
+}
+
+function drawGame() {
+  ctx.clearRect(0, 0, W, H);
+  ctx.shadowBlur = 0;
+  const L = LEVELS[level];
+
+  drawOrganGhost(L);
+
+  if (snake.length === 0) return;
+
+  // ── 1. Draw all tube segments first (bottom layer) ──────────
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  // Global glow pass for the whole channel network
+  ctx.shadowBlur = 6;
+  ctx.shadowColor = 'rgba(0,220,200,0.25)';
+
+  for (let i = snake.length - 1; i >= 1; i--) {
+    const a = segPx(snake[i]);
+    const b = segPx(snake[i - 1]);
+    drawChannelSegment(a.x, a.y, b.x, b.y);
+  }
+  ctx.shadowBlur = 0;
+
+  // ── 2. Draw junction nodes at every segment ──────────────────
+  for (let i = snake.length - 1; i >= 1; i--) {
+    const p = segPx(snake[i]);
+    drawNode(p.x, p.y, false);
+  }
+
+  // ── 3. Draw print head node on top ──────────────────────────
+  const hp = segPx(snake[0]);
+  drawNode(hp.x, hp.y, true);
+
+  // ── 4. Bubbles in the support bath ──────────────────────────
+  for (const b of bubbles) {
+    const bx = b.gx * CELL + CELL / 2;
+    const by = b.gy * CELL + CELL / 2;
+    const r  = b.type === 'big' ? CELL * 0.44 : CELL * 0.30;
+    const a  = b.alpha;
+
+    // Outer membrane ring
+    ctx.beginPath();
+    ctx.arc(bx, by, r, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(140,255,235,${a * 0.8})`;
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+
+    // Translucent interior — air pocket
+    const bg = ctx.createRadialGradient(bx - r*0.3, by - r*0.3, r*0.05, bx, by, r*0.9);
+    bg.addColorStop(0, `rgba(220,255,250,${a * 0.22})`);
+    bg.addColorStop(1, `rgba(0,180,160,${a * 0.06})`);
+    ctx.beginPath();
+    ctx.arc(bx, by, r * 0.92, 0, Math.PI * 2);
+    ctx.fillStyle = bg;
+    ctx.fill();
+
+    // Specular highlight (top-left)
+    ctx.beginPath();
+    ctx.arc(bx - r * 0.28, by - r * 0.28, r * 0.2, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,255,255,${a * 0.6})`;
+    ctx.fill();
+
+    // Second smaller highlight
+    ctx.beginPath();
+    ctx.arc(bx + r * 0.18, by + r * 0.20, r * 0.08, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,255,255,${a * 0.3})`;
+    ctx.fill();
+
+    if (b.type === 'big') {
+      ctx.fillStyle = `rgba(160,255,240,${a * 0.95})`;
+      ctx.font = '6px Press Start 2P';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('×3', bx, by + 0.5);
+    }
+  }
+
+  // ── 5. Progress ──────────────────────────────────────────────
+  const pct = Math.min(1, bubblesCollected / L.bubblesNeeded);
+  document.getElementById('prog-fill').style.width = (pct * 100) + '%';
+  document.getElementById('prog-pct').textContent = Math.round(pct * 100) + '%';
+}
+
+// Ghost organ outline shapes
+function drawOrganGhost(L) {
+  ctx.save();
+  ctx.globalAlpha = 0.06;
+  ctx.strokeStyle = '#00e5cc';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([4, 8]);
+  const cx = W / 2, cy = H / 2;
+
+  switch (LEVELS.indexOf(L)) {
+    case 0: // heart
+      drawHeartPath(ctx, cx, cy, Math.min(W, H) * 0.28);
+      break;
+    case 1: // lung
+      drawLungPath(ctx, cx, cy, Math.min(W, H) * 0.3);
+      break;
+    case 2: // liver
+      drawLiverPath(ctx, cx, cy, Math.min(W, H) * 0.3);
+      break;
+    case 3: // kidney
+      drawKidneyPath(ctx, cx, cy, Math.min(W, H) * 0.26);
+      break;
+    case 4: // brain
+      drawBrainPath(ctx, cx, cy, Math.min(W, H) * 0.3);
+      break;
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawHeartPath(c, cx, cy, s) {
+  c.beginPath();
+  c.moveTo(cx, cy + s * 0.3);
+  c.bezierCurveTo(cx - s * 1.2, cy - s * 0.4, cx - s * 1.2, cy - s, cx - s * 0.5, cy - s * 0.7);
+  c.bezierCurveTo(cx - s * 0.1, cy - s * 0.4, cx, cy - s * 0.2, cx, cy + s * 0.3);
+  c.bezierCurveTo(cx, cy - s * 0.2, cx + s * 0.1, cy - s * 0.4, cx + s * 0.5, cy - s * 0.7);
+  c.bezierCurveTo(cx + s * 1.2, cy - s, cx + s * 1.2, cy - s * 0.4, cx, cy + s * 0.3);
+}
+function drawLungPath(c, cx, cy, s) {
+  c.beginPath();
+  c.ellipse(cx - s * 0.5, cy, s * 0.45, s * 0.75, -0.15, 0, Math.PI * 2);
+  c.ellipse(cx + s * 0.5, cy, s * 0.45, s * 0.75, 0.15, 0, Math.PI * 2);
+}
+function drawLiverPath(c, cx, cy, s) {
+  c.beginPath();
+  c.moveTo(cx - s, cy + s * 0.3);
+  c.bezierCurveTo(cx - s * 1.1, cy - s * 0.4, cx - s * 0.2, cy - s * 0.8, cx + s * 0.3, cy - s * 0.6);
+  c.bezierCurveTo(cx + s * 1, cy - s * 0.5, cx + s * 1.1, cy + s * 0.2, cx + s * 0.8, cy + s * 0.5);
+  c.bezierCurveTo(cx + s * 0.3, cy + s * 0.8, cx - s * 0.4, cy + s * 0.8, cx - s, cy + s * 0.3);
+}
+function drawKidneyPath(c, cx, cy, s) {
+  c.beginPath();
+  c.moveTo(cx, cy - s * 0.85);
+  c.bezierCurveTo(cx + s * 0.9, cy - s * 0.85, cx + s * 0.9, cy + s * 0.85, cx, cy + s * 0.85);
+  c.bezierCurveTo(cx - s * 0.2, cy + s * 0.55, cx - s * 0.2, cy - s * 0.55, cx, cy - s * 0.85);
+}
+function drawBrainPath(c, cx, cy, s) {
+  c.beginPath();
+  c.moveTo(cx, cy - s * 0.1);
+  c.bezierCurveTo(cx - s * 0.1, cy - s * 0.8, cx - s * 1.1, cy - s * 0.7, cx - s * 1.1, cy);
+  c.bezierCurveTo(cx - s * 1.1, cy + s * 0.6, cx - s * 0.3, cy + s * 0.7, cx, cy + s * 0.1);
+  c.bezierCurveTo(cx + s * 0.3, cy + s * 0.7, cx + s * 1.1, cy + s * 0.6, cx + s * 1.1, cy);
+  c.bezierCurveTo(cx + s * 1.1, cy - s * 0.7, cx + s * 0.1, cy - s * 0.8, cx, cy - s * 0.1);
+}
+
+// ── HUD UPDATE ────────────────────────────────────────────────
+function updateHUD() {
+  const L = LEVELS[level];
+  document.getElementById('hud-lvl').textContent = 'LVL ' + (level + 1);
+  document.getElementById('hud-organ').textContent = L.name.replace('\n', ' ');
+  document.getElementById('hud-bubbles').textContent = bubblesCollected + '/' + L.bubblesNeeded;
+  document.getElementById('hud-len').textContent = snake.length;
+}
+
+// ── SPEECH BUBBLE ─────────────────────────────────────────────
+let speechEl = null;
+function showSpeech(txt) {
+  if (speechEl) speechEl.remove();
+  speechEl = document.createElement('div');
+  speechEl.className = 'speech';
+  speechEl.textContent = txt;
+  document.getElementById('canvas-wrap').appendChild(speechEl);
+  clearTimeout(speechTimer);
+  speechTimer = setTimeout(() => { if (speechEl) { speechEl.remove(); speechEl = null; } }, 2200);
+}
+
+// ── LEVEL COMPLETE ────────────────────────────────────────────
+function triggerLevelComplete() {
+  gameRunning = false;
+  clearInterval(bubbleTimer);
+  clearInterval(timerInterval);
+  const L = LEVELS[level];
+  document.getElementById('ov-organ').textContent = L.organ;
+  document.getElementById('ov-title').textContent = L.name;
+  document.getElementById('ov-sub').textContent = 'AIR CHANNELS: COMPLETE\nHOPE FOR HUMANITY: ' + L.hope;
+  document.getElementById('ov-stat').textContent = 'SCIENCE PTS: +' + totalSciPts;
+  document.getElementById('ov-levelcomplete').classList.remove('hidden');
+}
+document.getElementById('ov-next-btn').addEventListener('click', () => {
+  document.getElementById('ov-levelcomplete').classList.add('hidden');
+  level = (level + 1) % LEVELS.length;
+  startGame();
+});
+
+// ── GAME OVER ─────────────────────────────────────────────────
+function triggerGameOver(msg) {
+  gameRunning = false;
+  clearInterval(bubbleTimer);
+  clearInterval(timerInterval);
+  document.getElementById('go-sub').textContent = msg;
+  document.getElementById('go-score').textContent = totalSciPts;
+  document.getElementById('ov-gameover').classList.remove('hidden');
+}
+document.getElementById('go-restart-btn').addEventListener('click', () => {
+  document.getElementById('ov-gameover').classList.add('hidden');
+  startGame();
+});
+document.getElementById('go-title-btn').addEventListener('click', () => {
+  document.getElementById('ov-gameover').classList.add('hidden');
+  document.getElementById('game').classList.add('hidden');
+  document.getElementById('title').classList.remove('hidden');
+  totalSciPts = 0; level = 0;
+});
+
+// ── PAUSE ─────────────────────────────────────────────────────
+document.getElementById('pause-btn').addEventListener('click', togglePause);
+document.getElementById('pause-resume-btn').addEventListener('click', togglePause);
+document.getElementById('pause-title-btn').addEventListener('click', () => {
+  document.getElementById('ov-pause').classList.add('hidden');
+  gamePaused = false; gameRunning = false;
+  clearInterval(bubbleTimer); clearInterval(timerInterval);
+  document.getElementById('game').classList.add('hidden');
+  document.getElementById('title').classList.remove('hidden');
+  totalSciPts = 0; level = 0;
+});
+function togglePause() {
+  gamePaused = !gamePaused;
+  document.getElementById('ov-pause').classList.toggle('hidden', !gamePaused);
+  document.getElementById('pause-btn').textContent = gamePaused ? '▶' : '⏸';
+  if (!gamePaused) { lastTime = performance.now(); }
+}
+
+// ── CONTROLS — keyboard ───────────────────────────────────────
+document.addEventListener('keydown', e => {
+  switch (e.key) {
+    case 'ArrowUp':    case 'w': case 'W': if (dir.y !== 1)  nextDir = {x:0,y:-1}; e.preventDefault(); break;
+    case 'ArrowDown':  case 's': case 'S': if (dir.y !== -1) nextDir = {x:0,y:1};  e.preventDefault(); break;
+    case 'ArrowLeft':  case 'a': case 'A': if (dir.x !== 1)  nextDir = {x:-1,y:0}; e.preventDefault(); break;
+    case 'ArrowRight': case 'd': case 'D': if (dir.x !== -1) nextDir = {x:1,y:0};  e.preventDefault(); break;
+    case 'Escape': case 'p': case 'P': togglePause(); break;
+  }
+});
+
+// D-pad buttons
+document.getElementById('btn-up').addEventListener('touchstart',    e=>{e.preventDefault();if(dir.y!==1) nextDir={x:0,y:-1};},{passive:false});
+document.getElementById('btn-down').addEventListener('touchstart',  e=>{e.preventDefault();if(dir.y!==-1)nextDir={x:0,y:1};},{passive:false});
+document.getElementById('btn-left').addEventListener('touchstart',  e=>{e.preventDefault();if(dir.x!==1) nextDir={x:-1,y:0};},{passive:false});
+document.getElementById('btn-right').addEventListener('touchstart', e=>{e.preventDefault();if(dir.x!==-1)nextDir={x:1,y:0};},{passive:false});
+
+// Swipe support
+let swipeStart = null;
+document.getElementById('canvas-wrap').addEventListener('touchstart', e => {
+  swipeStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+}, { passive: true });
+document.getElementById('canvas-wrap').addEventListener('touchend', e => {
+  if (!swipeStart) return;
+  const dx = e.changedTouches[0].clientX - swipeStart.x;
+  const dy = e.changedTouches[0].clientY - swipeStart.y;
+  if (Math.abs(dx) < 10 && Math.abs(dy) < 10) { swipeStart = null; return; }
+  if (Math.abs(dx) > Math.abs(dy)) {
+    if (dx > 0 && dir.x !== -1) nextDir = {x:1,y:0};
+    else if (dx < 0 && dir.x !== 1) nextDir = {x:-1,y:0};
+  } else {
+    if (dy > 0 && dir.y !== -1) nextDir = {x:0,y:1};
+    else if (dy < 0 && dir.y !== 1) nextDir = {x:0,y:-1};
+  }
+  swipeStart = null;
+}, { passive: true });
+
+// ── TIMER BAR — add to HUD ────────────────────────────────────
+// Inject timer bar into hud element
+(function() {
+  const tw = document.createElement('div');
+  tw.style.cssText = 'height:3px;background:rgba(0,200,180,0.1);flex-shrink:0;width:100%';
+  const tf = document.createElement('div');
+  tf.id = 'hud-timer-bar';
+  tf.style.cssText = 'height:100%;background:#00e5cc;width:100%;transition:width 0.1s linear';
+  tw.appendChild(tf);
+  document.getElementById('game').insertBefore(tw, document.getElementById('game').querySelector('.prog-wrap'));
+})();
+
+// ── START / FLOW ──────────────────────────────────────────────
+function startGame() {
+  document.getElementById('game').classList.remove('hidden');
+  document.getElementById('title').classList.add('hidden');
+  resizeCanvases();
+  initBgParticles();
+  initGame();
+  lastTime = performance.now();
+}
+
+document.getElementById('start-btn').addEventListener('click', startGame);
+
+window.addEventListener('resize', () => {
+  if (!document.getElementById('game').classList.contains('hidden')) {
+    resizeCanvases();
+    initBgParticles();
+  }
+});
+</script>
+</body>
+</html>
